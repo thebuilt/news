@@ -1,0 +1,118 @@
+:root {
+  --bg: #0c1220;
+  --card: #121a2b;
+  --text: #e8eefc;
+  --muted: #98a8c7;
+  --accent: #38bdf8;
+}
+
+body.light {
+  --bg: #f3f7ff;
+  --card: #ffffff;
+  --text: #12213d;
+  --muted: #4f648a;
+  --accent: #0ea5e9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #1e2f55 0%, transparent 50%),
+    radial-gradient(1000px 500px at 110% 0%, #153e57 0%, transparent 45%),
+    var(--bg);
+  color: var(--text);
+}
+
+#progress {
+  height: 4px;
+  background: transparent;
+}
+
+#bar {
+  width: 0%;
+  height: 100%;
+  background: var(--accent);
+  transition: width .25s;
+}
+
+header,
+main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.map-panel,
+.list-panel {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+#worldMap {
+  height: 520px;
+}
+
+#articles {
+  max-height: 520px;
+  overflow: auto;
+  display: grid;
+  gap: 10px;
+}
+
+.article {
+  padding: 12px;
+  border: 1px solid #2f3f5f;
+  border-radius: 12px;
+}
+
+.article a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.meta {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+button,
+select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #3a4d77;
+  background: var(--card);
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  main {
+    grid-template-columns: 1fr;
+  }
+
+  #worldMap,
+  #articles {
+    height: 420px;
+    max-height: 420px;
+  }
+}

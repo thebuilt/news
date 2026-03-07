@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asbestos News Tracker</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="progress"><div id="bar"></div></div>
+  <header>
+    <h1>Asbestos Topic News</h1>
+    <div>
+      <select id="dateSelect"></select>
+      <button id="themeBtn">Toggle Theme</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="map-panel">
+      <h2>Country Map (Source Country)</h2>
+      <div id="worldMap"></div>
+    </section>
+    <section class="list-panel">
+      <h2 id="listTitle">All Countries</h2>
+      <div id="articles"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap/dist/maps/world.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

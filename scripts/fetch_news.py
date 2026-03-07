@@ -138,22 +138,25 @@ def infer_country_from_domain(domain):
     return ("XX", "Unknown")
 
 
-INDIAN_OUTLET_HINTS = {
-    "the hindu",
-    "times of india",
-    "hindustan times",
-    "ndtv",
-    "the indian express",
-    "deccan herald",
-    "business standard",
-    "financial express",
-    "india today",
-    "mint",
-    "livemint",
-    "the wire",
-    "scroll.in",
-    "aninews",
-    "pti",
+OUTLET_COUNTRY_HINTS = {
+    "the hindu": "IN",
+    "times of india": "IN",
+    "hindustan times": "IN",
+    "ndtv": "IN",
+    "the indian express": "IN",
+    "deccan herald": "IN",
+    "business standard": "IN",
+    "financial express": "IN",
+    "india today": "IN",
+    "mint": "IN",
+    "livemint": "IN",
+    "the wire": "IN",
+    "scroll.in": "IN",
+    "aninews": "IN",
+    "pti": "IN",
+    "bbc": "GB",
+    "the guardian": "GB",
+    "sky news": "GB",
 }
 
 
@@ -161,9 +164,10 @@ def infer_country_from_outlet_name(name):
     if not name:
         return ("XX", "Unknown")
     lowered = name.strip().lower()
-    for hint in INDIAN_OUTLET_HINTS:
+    for hint, code in OUTLET_COUNTRY_HINTS.items():
         if hint in lowered:
-            return ("IN", "India")
+            code = normalize_country_code(code)
+            return (code, country_name_from_code(code))
     return ("XX", "Unknown")
 
 

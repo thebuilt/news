@@ -40,6 +40,12 @@ function normalizeArticles(items) {
   }));
 }
 
+function countryLabelFromCode(code) {
+  const normalized = normalizeCountryCode(code);
+  const found = ALL.find((a) => normalizeCountryCode(a.country_code) === normalized);
+  return found ? found.country : normalized;
+}
+
 function renderList(countryCode = null) {
   currentCountryCode = countryCode;
   FILTERED = countryCode ? ALL.filter((a) => a.country_code === countryCode) : ALL;
@@ -54,7 +60,9 @@ function showAllCountries() {
 
 function drawPage() {
   const items = FILTERED.slice(0, pageSize * page);
-  listTitle.textContent = currentCountryCode ? `Country: ${currentCountryCode}` : "All Countries";
+  listTitle.textContent = currentCountryCode
+    ? `Country: ${countryLabelFromCode(currentCountryCode)} (${currentCountryCode})`
+    : "All Countries";
   if (clearFilterBtn) {
     clearFilterBtn.disabled = !currentCountryCode;
   }
@@ -123,6 +131,7 @@ function renderCountrySelect() {
 }
 
 function renderMap() {
+  const counts = countryCounts();
   if (mapObj) {
     mapObj.destroy();
   }
@@ -135,22 +144,26 @@ function renderMap() {
     series: {
       regions: [
         {
-          values: countryCounts(),
+          values: counts,
           scale: ["#334155", "#38bdf8"],
           normalizeFunction: "polynomial",
         },
       ],
     },
     onRegionClick: (_, code) => {
-      if (currentCountryCode === code) {
+      const normalizedCode = normalizeCountryCode(code);
+      if (!counts[normalizedCode]) {
+        return;
+      }
+      if (currentCountryCode === normalizedCode) {
         renderList(null);
         return;
       }
-      renderList(code);
+      renderList(normalizedCode);
     },
     onRegionTooltipShow: (event, tooltip, code) => {
-      const counts = countryCounts();
-      const count = counts[code] || 0;
+      const normalizedCode = normalizeCountryCode(code);
+      const count = counts[normalizedCode] || 0;
       tooltip.text(`${tooltip.text()} (${count})`);
     },
   });
@@ -214,7 +227,7 @@ if (countrySelect) {
       renderList(null);
       return;
     }
-    renderList(countrySelect.value);
+    renderList(normalizeCountryCode(countrySelect.value));
   };
 }
 window.__showAllCountries = showAllCountries;

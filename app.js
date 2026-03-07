@@ -2,7 +2,9 @@ const bar = document.getElementById("bar");
 const articlesEl = document.getElementById("articles");
 const listTitle = document.getElementById("listTitle");
 const dateSelect = document.getElementById("dateSelect");
+const countrySelect = document.getElementById("countrySelect");
 const themeBtn = document.getElementById("themeBtn");
+const clearFilterBtn = document.getElementById("clearFilterBtn");
 
 let ALL = [];
 let FILTERED = [];
@@ -27,12 +29,16 @@ function renderList(countryCode = null) {
   currentCountryCode = countryCode;
   FILTERED = countryCode ? ALL.filter((a) => a.country_code === countryCode) : ALL;
   page = 1;
+  syncCountrySelect();
   drawPage();
 }
 
 function drawPage() {
   const items = FILTERED.slice(0, pageSize * page);
   listTitle.textContent = currentCountryCode ? `Country: ${currentCountryCode}` : "All Countries";
+  if (clearFilterBtn) {
+    clearFilterBtn.disabled = !currentCountryCode;
+  }
   const hasMore = FILTERED.length > items.length;
   const content =
     items
@@ -66,6 +72,37 @@ function countryCounts() {
   return counts;
 }
 
+function countryLabelMap() {
+  const map = {};
+  for (const article of ALL) {
+    if (!map[article.country_code]) {
+      map[article.country_code] = article.country || article.country_code || "Unknown";
+    }
+  }
+  return map;
+}
+
+function syncCountrySelect() {
+  if (!countrySelect) return;
+  countrySelect.value = currentCountryCode || "ALL";
+}
+
+function renderCountrySelect() {
+  if (!countrySelect) return;
+  const labels = countryLabelMap();
+  const counts = countryCounts();
+  const options = Object.keys(labels)
+    .sort((a, b) => (labels[a] || "").localeCompare(labels[b] || ""))
+    .map((code) => {
+      const label = labels[code] || code;
+      const count = counts[code] || 0;
+      return `<option value="${code}">${label} (${count})</option>`;
+    })
+    .join("");
+  countrySelect.innerHTML = `<option value="ALL">All Countries (${ALL.length})</option>${options}`;
+  syncCountrySelect();
+}
+
 function renderMap() {
   if (mapObj) {
     mapObj.destroy();
@@ -85,7 +122,18 @@ function renderMap() {
         },
       ],
     },
-    onRegionClick: (_, code) => renderList(code),
+    onRegionClick: (_, code) => {
+      if (currentCountryCode === code) {
+        renderList(null);
+        return;
+      }
+      renderList(code);
+    },
+    onRegionTooltipShow: (event, tooltip, code) => {
+      const counts = countryCounts();
+      const count = counts[code] || 0;
+      tooltip.text(`${tooltip.text()} (${count})`);
+    },
   });
 }
 
@@ -95,6 +143,7 @@ async function loadDate(dateValue) {
   const json = await res.json();
   setProgress(70);
   ALL = json.articles || [];
+  renderCountrySelect();
   setTimeout(() => renderMap(), 0);
   renderList();
   setProgress(100);
@@ -108,6 +157,7 @@ async function init() {
     const latest = await fetch("data/latest.json").then((r) => r.json());
     ALL = latest.articles || [];
     latestDate = latest.date || "";
+    renderCountrySelect();
     renderList();
     setTimeout(() => renderMap(), 0);
     setProgress(60);
@@ -135,4 +185,16 @@ async function init() {
 }
 
 themeBtn.onclick = () => document.body.classList.toggle("light");
+if (clearFilterBtn) {
+  clearFilterBtn.onclick = () => renderList(null);
+}
+if (countrySelect) {
+  countrySelect.onchange = () => {
+    if (countrySelect.value === "ALL") {
+      renderList(null);
+      return;
+    }
+    renderList(countrySelect.value);
+  };
+}
 init();

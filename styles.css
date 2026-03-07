@@ -67,6 +67,18 @@ main {
   padding: 16px;
 }
 
+.list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.list-head h2 {
+  margin: 0;
+}
+
 #worldMap {
   height: 520px;
 }
@@ -103,6 +115,15 @@ select {
   border: 1px solid #3a4d77;
   background: var(--card);
   color: var(--text);
+}
+
+#countrySelect {
+  min-width: 220px;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .more-btn {

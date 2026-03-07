@@ -12,6 +12,7 @@
   <header>
     <h1>Asbestos Topic News</h1>
     <div>
+      <select id="countrySelect"></select>
       <select id="dateSelect"></select>
       <button id="themeBtn">Toggle Theme</button>
     </div>
@@ -23,7 +24,10 @@
       <div id="worldMap"></div>
     </section>
     <section class="list-panel">
-      <h2 id="listTitle">All Countries</h2>
+      <div class="list-head">
+        <h2 id="listTitle">All Countries</h2>
+        <button id="clearFilterBtn" type="button">Show All Countries</button>
+      </div>
       <div id="articles"></div>
     </section>
   </main>

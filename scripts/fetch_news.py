@@ -94,6 +94,12 @@ def country_name_from_code(code):
             return c.name if c else "Unknown"
         except Exception:
             return "Unknown"
+    if len(code) == 3:
+        try:
+            c = pycountry.countries.get(alpha_3=code)
+            return c.name if c else "Unknown"
+        except Exception:
+            return "Unknown"
     return code.title()
 
 
@@ -108,6 +114,35 @@ def infer_country_from_domain(domain):
                 return (tld.upper(), c.name)
         except Exception:
             pass
+    return ("XX", "Unknown")
+
+
+INDIAN_OUTLET_HINTS = {
+    "the hindu",
+    "times of india",
+    "hindustan times",
+    "ndtv",
+    "the indian express",
+    "deccan herald",
+    "business standard",
+    "financial express",
+    "india today",
+    "mint",
+    "livemint",
+    "the wire",
+    "scroll.in",
+    "aninews",
+    "pti",
+}
+
+
+def infer_country_from_outlet_name(name):
+    if not name:
+        return ("XX", "Unknown")
+    lowered = name.strip().lower()
+    for hint in INDIAN_OUTLET_HINTS:
+        if hint in lowered:
+            return ("IN", "India")
     return ("XX", "Unknown")
 
 
@@ -179,15 +214,22 @@ def fetch_google_rss(terms):
             feed = feedparser.parse(resp.text)
             for e in feed.entries:
                 link = e.get("link", "")
-                outlet = (e.get("source", {}) or {}).get("title", "") or urlparse(link).netloc
+                source = e.get("source", {}) or {}
+                outlet = source.get("title", "") or urlparse(link).netloc
+                source_href = source.get("href", "")
                 dt_raw = e.get("published", "") or e.get("updated", "")
                 try:
                     dt = dateparser.parse(dt_raw).astimezone(timezone.utc)
                 except Exception:
                     dt = datetime.now(timezone.utc)
 
-                domain = urlparse(link).netloc.lower()
-                ccode, cname = infer_country_from_domain(domain)
+                source_domain = urlparse(source_href).netloc.lower()
+                link_domain = urlparse(link).netloc.lower()
+                ccode, cname = infer_country_from_domain(source_domain)
+                if ccode == "XX":
+                    ccode, cname = infer_country_from_domain(link_domain)
+                if ccode == "XX":
+                    ccode, cname = infer_country_from_outlet_name(outlet)
 
                 articles.append(
                     {

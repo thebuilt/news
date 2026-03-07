@@ -33,6 +33,10 @@ function renderList(countryCode = null) {
   drawPage();
 }
 
+function showAllCountries() {
+  renderList(null);
+}
+
 function drawPage() {
   const items = FILTERED.slice(0, pageSize * page);
   listTitle.textContent = currentCountryCode ? `Country: ${currentCountryCode}` : "All Countries";
@@ -186,7 +190,8 @@ async function init() {
 
 themeBtn.onclick = () => document.body.classList.toggle("light");
 if (clearFilterBtn) {
-  clearFilterBtn.onclick = () => renderList(null);
+  clearFilterBtn.onclick = showAllCountries;
+  clearFilterBtn.addEventListener("click", showAllCountries);
 }
 if (countrySelect) {
   countrySelect.onchange = () => {
@@ -197,4 +202,5 @@ if (countrySelect) {
     renderList(countrySelect.value);
   };
 }
+window.__showAllCountries = showAllCountries;
 init();

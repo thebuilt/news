@@ -157,6 +157,41 @@ OUTLET_COUNTRY_HINTS = {
     "bbc": "GB",
     "the guardian": "GB",
     "sky news": "GB",
+    "bbc news": "GB",
+    "bbc.co.uk": "GB",
+    "bbc.com": "GB",
+    "the telegraph": "GB",
+    "independent": "GB",
+    "reuters": "GB",
+    "economic times": "IN",
+    "the tribune": "IN",
+    "news18": "IN",
+    "times now": "IN",
+    "republic world": "IN",
+    "firstpost": "IN",
+    "the print": "IN",
+    "cnn": "US",
+    "the new york times": "US",
+    "new york times": "US",
+    "washington post": "US",
+    "wall street journal": "US",
+    "wsj": "US",
+    "usa today": "US",
+    "associated press": "US",
+    "ap news": "US",
+    "bloomberg": "US",
+    "cnbc": "US",
+    "abc news": "US",
+    "nbc news": "US",
+    "cbs news": "US",
+    "fox news": "US",
+    "npr": "US",
+    "los angeles times": "US",
+    "chicago tribune": "US",
+    "forbes": "US",
+    "axios": "US",
+    "politico": "US",
+    "time": "US",
 }
 
 
@@ -169,6 +204,26 @@ def infer_country_from_outlet_name(name):
             code = normalize_country_code(code)
             return (code, country_name_from_code(code))
     return ("XX", "Unknown")
+
+
+def normalize_domain_like(value):
+    if not value:
+        return ""
+    text = value.strip().lower()
+    if not text:
+        return ""
+    if "://" in text:
+        return urlparse(text).netloc.lower()
+    return text.split("/")[0]
+
+
+def infer_country_from_outlet(outlet):
+    domain = normalize_domain_like(outlet)
+    if domain:
+        ccode, cname = infer_country_from_domain(domain)
+        if ccode != "XX":
+            return ccode, cname
+    return infer_country_from_outlet_name(outlet)
 
 
 def fetch_gdelt(terms):
@@ -254,7 +309,7 @@ def fetch_google_rss(terms):
                 if ccode == "XX":
                     ccode, cname = infer_country_from_domain(link_domain)
                 if ccode == "XX":
-                    ccode, cname = infer_country_from_outlet_name(outlet)
+                    ccode, cname = infer_country_from_outlet(outlet)
                 ccode = normalize_country_code(ccode)
                 cname = country_name_from_code(ccode) if ccode != "XX" else cname
 

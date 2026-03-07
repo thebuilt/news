@@ -5,7 +5,11 @@ const dateSelect = document.getElementById("dateSelect");
 const themeBtn = document.getElementById("themeBtn");
 
 let ALL = [];
+let FILTERED = [];
 let mapObj = null;
+let currentCountryCode = null;
+let pageSize = 120;
+let page = 1;
 
 const setProgress = (v) => {
   bar.style.width = `${v}%`;
@@ -20,18 +24,38 @@ function fmtDate(s) {
 }
 
 function renderList(countryCode = null) {
-  const items = countryCode ? ALL.filter((a) => a.country_code === countryCode) : ALL;
-  listTitle.textContent = countryCode ? `Country: ${countryCode}` : "All Countries";
-  articlesEl.innerHTML = items
-    .map(
+  currentCountryCode = countryCode;
+  FILTERED = countryCode ? ALL.filter((a) => a.country_code === countryCode) : ALL;
+  page = 1;
+  drawPage();
+}
+
+function drawPage() {
+  const items = FILTERED.slice(0, pageSize * page);
+  listTitle.textContent = currentCountryCode ? `Country: ${currentCountryCode}` : "All Countries";
+  const hasMore = FILTERED.length > items.length;
+  const content =
+    items
+      .map(
       (a) => `
     <div class="article">
       <a href="${a.url}" target="_blank" rel="noopener noreferrer">${a.title}</a>
       <div class="meta">${a.outlet} | ${a.country} | ${fmtDate(a.date)} | ${a.source}</div>
     </div>
   `
-    )
-    .join("") || "<div>No articles found.</div>";
+      )
+      .join("") || "<div>No articles found.</div>";
+  const moreBtn = hasMore
+    ? `<button id="loadMoreBtn" class="more-btn">Load more (${FILTERED.length - items.length} remaining)</button>`
+    : "";
+  articlesEl.innerHTML = `${content}${moreBtn}`;
+  const loadMoreBtn = document.getElementById("loadMoreBtn");
+  if (loadMoreBtn) {
+    loadMoreBtn.onclick = () => {
+      page += 1;
+      drawPage();
+    };
+  }
 }
 
 function countryCounts() {
@@ -71,7 +95,7 @@ async function loadDate(dateValue) {
   const json = await res.json();
   setProgress(70);
   ALL = json.articles || [];
-  renderMap();
+  setTimeout(() => renderMap(), 0);
   renderList();
   setProgress(100);
   setTimeout(() => setProgress(0), 500);
@@ -79,15 +103,35 @@ async function loadDate(dateValue) {
 
 async function init() {
   setProgress(10);
-  const idx = await fetch("data/index.json").then((r) => r.json());
-  const dates = idx.dates || [];
-  dateSelect.innerHTML = dates.map((d) => `<option value="${d}">${d}</option>`).join("");
-  if (!dates.length) {
+  let latestDate = "";
+  try {
+    const latest = await fetch("data/latest.json").then((r) => r.json());
+    ALL = latest.articles || [];
+    latestDate = latest.date || "";
+    renderList();
+    setTimeout(() => renderMap(), 0);
+    setProgress(60);
+  } catch {
     articlesEl.innerHTML = "<div>No data yet. Run the workflow once.</div>";
+    setProgress(0);
     return;
   }
-  await loadDate(dates[0]);
-  dateSelect.onchange = () => loadDate(dateSelect.value);
+
+  try {
+    const idx = await fetch("data/index.json").then((r) => r.json());
+    const dates = idx.dates || [];
+    dateSelect.innerHTML = dates.map((d) => `<option value="${d}">${d}</option>`).join("");
+    if (latestDate && dates.includes(latestDate)) {
+      dateSelect.value = latestDate;
+    }
+    if (dates.length) {
+      dateSelect.onchange = () => loadDate(dateSelect.value);
+    }
+  } catch {
+    dateSelect.innerHTML = "";
+  }
+  setProgress(100);
+  setTimeout(() => setProgress(0), 500);
 }
 
 themeBtn.onclick = () => document.body.classList.toggle("light");

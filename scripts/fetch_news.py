@@ -15,6 +15,7 @@ KEYWORDS_FILE = os.path.join(ROOT, "keywords", "base_keywords.txt")
 
 TODAY_UTC = datetime.now(timezone.utc).date()
 TODAY_STR = TODAY_UTC.isoformat()
+MAX_DAILY_ARTICLES = 1200
 
 
 def load_base_keywords():
@@ -115,7 +116,7 @@ def fetch_gdelt(terms):
     startdt = TODAY_UTC.strftime("%Y%m%d") + "000000"
     enddt = TODAY_UTC.strftime("%Y%m%d") + "235959"
 
-    for group in chunks(terms[:240], 12):
+    for group in chunks(terms[:120], 12):
         query = " OR ".join([f'"{t}"' for t in group])
         try:
             r = requests.get(
@@ -123,7 +124,7 @@ def fetch_gdelt(terms):
                 params={
                     "query": query,
                     "mode": "ArtList",
-                    "maxrecords": 250,
+                    "maxrecords": 120,
                     "format": "json",
                     "sort": "DateDesc",
                     "startdatetime": startdt,
@@ -158,6 +159,8 @@ def fetch_gdelt(terms):
                         "source": "GDELT",
                     }
                 )
+                if len(articles) >= MAX_DAILY_ARTICLES:
+                    return articles
         except Exception:
             continue
     return articles
@@ -165,7 +168,7 @@ def fetch_gdelt(terms):
 
 def fetch_google_rss(terms):
     articles = []
-    for group in chunks(terms[:180], 8):
+    for group in chunks(terms[:120], 8):
         q = "(" + " OR ".join([f'"{t}"' for t in group]) + ") when:1d"
         try:
             resp = requests.get(
@@ -197,6 +200,8 @@ def fetch_google_rss(terms):
                         "source": "GoogleNewsRSS",
                     }
                 )
+                if len(articles) >= MAX_DAILY_ARTICLES:
+                    return articles
         except Exception:
             continue
     return articles
@@ -248,7 +253,7 @@ def main():
 
     gdelt = fetch_gdelt(terms)
     grss = fetch_google_rss(terms)
-    articles = dedupe(gdelt + grss)
+    articles = dedupe(gdelt + grss)[:MAX_DAILY_ARTICLES]
 
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -259,10 +264,10 @@ def main():
 
     day_file = os.path.join(DATA_DIR, f"{TODAY_STR}.json")
     with open(day_file, "w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False, indent=2)
+        json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
 
     with open(os.path.join(DATA_DIR, "latest.json"), "w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False, indent=2)
+        json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
 
     prune_old_files()
     build_index()

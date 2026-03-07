@@ -105,6 +105,11 @@ select {
   color: var(--text);
 }
 
+.more-btn {
+  margin-top: 10px;
+  width: 100%;
+}
+
 @media (max-width: 900px) {
   main {
     grid-template-columns: 1fr;

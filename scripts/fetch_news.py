@@ -294,6 +294,10 @@ def fetch_gdelt(terms):
                     source_code, source_country = infer_country_from_domain(domain)
                 else:
                     source_country = country_name_from_code(source_code)
+                if source_code == "XX":
+                    source_code, source_country = infer_country_from_outlet(a.get("domain", "") or domain)
+                if source_code == "XX":
+                    source_code, source_country = infer_country_from_title(a.get("title", ""))
 
                 seendate = a.get("seendate", "")
                 try:

@@ -51,7 +51,29 @@ function normalizeArticles(items) {
       const code = normalizeCountryCode(a.country_code);
       if (code !== "XX") return code;
       const name = String(a.country || "").trim().toLowerCase();
-      return COUNTRY_NAME_TO_CODE[name] || "XX";
+      if (COUNTRY_NAME_TO_CODE[name]) return COUNTRY_NAME_TO_CODE[name];
+      const title = String(a.title || "").toLowerCase();
+      if (/\b(united states|u\.s\.a\.|u\.s\.|usa|america)\b/.test(title)) return "US";
+      if (/\b(india|bharat)\b/.test(title)) return "IN";
+      if (/\b(united kingdom|u\.k\.|uk|britain|england|scotland|wales)\b/.test(title)) return "GB";
+      if (/\b(australia)\b/.test(title)) return "AU";
+      if (
+        [
+          "colorado",
+          "long beach",
+          "california",
+          "new york",
+          "texas",
+          "florida",
+          "washington dc",
+          "los angeles",
+          "chicago",
+          "houston",
+        ].some((x) => title.includes(x))
+      ) {
+        return "US";
+      }
+      return "XX";
     })(),
   }));
 }

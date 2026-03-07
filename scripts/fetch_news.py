@@ -17,6 +17,11 @@ TODAY_UTC = datetime.now(timezone.utc).date()
 TODAY_STR = TODAY_UTC.isoformat()
 MAX_DAILY_ARTICLES = 1200
 
+COUNTRY_CODE_ALIASES = {
+    "UK": "GB",
+    "EL": "GR",
+}
+
 
 def load_base_keywords():
     with open(KEYWORDS_FILE, "r", encoding="utf-8") as f:
@@ -103,6 +108,22 @@ def country_name_from_code(code):
     return code.title()
 
 
+def normalize_country_code(code):
+    if not code:
+        return "XX"
+    code = str(code).strip().upper()
+    if not code:
+        return "XX"
+    code = COUNTRY_CODE_ALIASES.get(code, code)
+    if len(code) == 2 and pycountry.countries.get(alpha_2=code):
+        return code
+    if len(code) == 3:
+        c = pycountry.countries.get(alpha_3=code)
+        if c:
+            return c.alpha_2
+    return "XX"
+
+
 def infer_country_from_domain(domain):
     if not domain:
         return ("XX", "Unknown")
@@ -171,7 +192,7 @@ def fetch_gdelt(terms):
             for a in data.get("articles", []):
                 url = a.get("url", "")
                 domain = urlparse(url).netloc.lower()
-                source_code = (a.get("sourcecountry") or "").upper()
+                source_code = normalize_country_code(a.get("sourcecountry"))
                 if len(source_code) != 2:
                     source_code, source_country = infer_country_from_domain(domain)
                 else:
@@ -230,6 +251,8 @@ def fetch_google_rss(terms):
                     ccode, cname = infer_country_from_domain(link_domain)
                 if ccode == "XX":
                     ccode, cname = infer_country_from_outlet_name(outlet)
+                ccode = normalize_country_code(ccode)
+                cname = country_name_from_code(ccode) if ccode != "XX" else cname
 
                 articles.append(
                     {

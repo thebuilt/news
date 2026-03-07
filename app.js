@@ -12,6 +12,7 @@ let mapObj = null;
 let currentCountryCode = null;
 let pageSize = 120;
 let page = 1;
+const COUNTRY_CODE_ALIASES = { UK: "GB", EL: "GR" };
 
 const setProgress = (v) => {
   bar.style.width = `${v}%`;
@@ -23,6 +24,20 @@ function fmtDate(s) {
   } catch {
     return s;
   }
+}
+
+function normalizeCountryCode(code) {
+  if (!code) return "XX";
+  const c = String(code).trim().toUpperCase();
+  if (!c) return "XX";
+  return COUNTRY_CODE_ALIASES[c] || c;
+}
+
+function normalizeArticles(items) {
+  return (items || []).map((a) => ({
+    ...a,
+    country_code: normalizeCountryCode(a.country_code),
+  }));
 }
 
 function renderList(countryCode = null) {
@@ -146,7 +161,7 @@ async function loadDate(dateValue) {
   const res = await fetch(`data/${dateValue}.json`);
   const json = await res.json();
   setProgress(70);
-  ALL = json.articles || [];
+  ALL = normalizeArticles(json.articles || []);
   renderCountrySelect();
   setTimeout(() => renderMap(), 0);
   renderList();
@@ -159,7 +174,7 @@ async function init() {
   let latestDate = "";
   try {
     const latest = await fetch("data/latest.json").then((r) => r.json());
-    ALL = latest.articles || [];
+    ALL = normalizeArticles(latest.articles || []);
     latestDate = latest.date || "";
     renderCountrySelect();
     renderList();

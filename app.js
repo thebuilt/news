@@ -13,6 +13,17 @@ let currentCountryCode = null;
 let pageSize = 120;
 let page = 1;
 const COUNTRY_CODE_ALIASES = { UK: "GB", EL: "GR" };
+const COUNTRY_NAME_TO_CODE = {
+  "united states": "US",
+  usa: "US",
+  "u.s.a.": "US",
+  "u.s.": "US",
+  india: "IN",
+  "united kingdom": "GB",
+  britain: "GB",
+  england: "GB",
+  australia: "AU",
+};
 
 const setProgress = (v) => {
   bar.style.width = `${v}%`;
@@ -36,7 +47,12 @@ function normalizeCountryCode(code) {
 function normalizeArticles(items) {
   return (items || []).map((a) => ({
     ...a,
-    country_code: normalizeCountryCode(a.country_code),
+    country_code: (() => {
+      const code = normalizeCountryCode(a.country_code);
+      if (code !== "XX") return code;
+      const name = String(a.country || "").trim().toLowerCase();
+      return COUNTRY_NAME_TO_CODE[name] || "XX";
+    })(),
   }));
 }
 

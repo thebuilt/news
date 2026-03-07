@@ -194,6 +194,26 @@ OUTLET_COUNTRY_HINTS = {
     "time": "US",
 }
 
+TITLE_COUNTRY_PATTERNS = [
+    (re.compile(r"\b(united states|u\.s\.a\.|u\.s\.|usa|america)\b", re.IGNORECASE), "US"),
+    (re.compile(r"\b(india|bharat)\b", re.IGNORECASE), "IN"),
+    (re.compile(r"\b(united kingdom|u\.k\.|uk|britain|england|scotland|wales)\b", re.IGNORECASE), "GB"),
+    (re.compile(r"\b(australia)\b", re.IGNORECASE), "AU"),
+]
+
+US_LOCATION_HINTS = [
+    "colorado",
+    "long beach",
+    "california",
+    "new york",
+    "texas",
+    "florida",
+    "washington dc",
+    "los angeles",
+    "chicago",
+    "houston",
+]
+
 
 def infer_country_from_outlet_name(name):
     if not name:
@@ -224,6 +244,24 @@ def infer_country_from_outlet(outlet):
         if ccode != "XX":
             return ccode, cname
     return infer_country_from_outlet_name(outlet)
+
+
+def infer_country_from_title(title):
+    if not title:
+        return ("XX", "Unknown")
+    text = title.strip()
+    lowered = text.lower()
+
+    for pattern, code in TITLE_COUNTRY_PATTERNS:
+        if pattern.search(text):
+            norm = normalize_country_code(code)
+            return norm, country_name_from_code(norm)
+
+    for hint in US_LOCATION_HINTS:
+        if hint in lowered:
+            return "US", "United States"
+
+    return ("XX", "Unknown")
 
 
 def fetch_gdelt(terms):
@@ -310,6 +348,8 @@ def fetch_google_rss(terms):
                     ccode, cname = infer_country_from_domain(link_domain)
                 if ccode == "XX":
                     ccode, cname = infer_country_from_outlet(outlet)
+                if ccode == "XX":
+                    ccode, cname = infer_country_from_title(e.get("title", ""))
                 ccode = normalize_country_code(ccode)
                 cname = country_name_from_code(ccode) if ccode != "XX" else cname
 
